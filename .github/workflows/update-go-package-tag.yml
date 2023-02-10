@@ -26,7 +26,7 @@ jobs:
               with:
                 script: |
                   const script = require('./script/update-tag.js')
-                  console.log(script({github, context}))
+                  script({github, context})
 #            - name: Print version with github-script
 #              uses: actions/github-script@v6
 #              with:
