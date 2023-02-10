@@ -14,10 +14,6 @@ jobs:
         steps:
             - name: Checkout
               uses: actions/checkout@v3
-#            - name: Get the version
-#              id: get_platform_client_go_version
-#              run: |
-#                echo "PLATFORM_CLIENT_GO_VERSION=$(grep -o 'v[0-9]\+\.[0-9]\+\.[0-9]\+' clients.go)" >> $GITHUB_OUTPUT
             - name: Update Tag
               uses: actions/github-script@v6
               with:
@@ -50,15 +46,5 @@ jobs:
                   } catch (error) {
                     console.log(error)
                   }
-#            - name: Update go package tag
-#              uses: actions/github-script@v6
-#              env:
-#                PLATFORM_CLIENT_GO_VERSION: ${{ steps.get_platform_client_go_version.outputs.PLATFORM_CLIENT_GO_VERSION }}
-#              with:
-#                script: |
-#                  github.rest.git.createRef({
-#                    owner: context.repo.owner,
-#                    repo: context.repo.repo,
-#                    ref: `refs/tags/${process.env.PLATFORM_CLIENT_GO_VERSION}`,
-#                    sha: context.sha
-#                  })
+                  
+                  console.log("Tag " + version + " created")
