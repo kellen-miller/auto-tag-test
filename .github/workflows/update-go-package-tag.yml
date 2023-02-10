@@ -37,7 +37,7 @@ jobs:
 #              if: ${{ steps.check_tag.outputs.CURRENT_TAG != steps.get_version.outputs.PLATFORM_CLIENT_GO_VERSION }}
               uses: actions/github-script@v6
               env:
-                PLATFORM_CLIENT_GO_VERSION: ${{ steps.get_version.outputs.PLATFORM_CLIENT_GO_VERSION }}
+                PLATFORM_CLIENT_GO_VERSION: ${{ steps.get_platform_client_go_version.outputs.PLATFORM_CLIENT_GO_VERSION }}
               with:
                 script: |
                   github.rest.git.createRef({
