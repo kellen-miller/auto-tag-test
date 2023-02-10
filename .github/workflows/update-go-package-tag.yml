@@ -14,18 +14,28 @@ jobs:
         steps:
             - name: Checkout
               uses: actions/checkout@v3
+            - name: Check current tag
+              id: get_current_tag
+              run: |
+                echo "CURRENT_TAG=$(git describe --contains $(git rev-parse HEAD) 2>/dev/null)" >> $GITHUB_OUTPUT
             - name: Get the version
-              id: get_version
+              id: get_platform_client_go_version
               run: |
                 echo "PLATFORM_CLIENT_GO_VERSION=$(grep -o 'v[0-9]\+\.[0-9]\+\.[0-9]\+' clients.go)" >> $GITHUB_OUTPUT
-            - name: Create Tag
+            - name: Update go package tag
+              # not sure if this will ever happen, but just in case
+              if: ${{ steps.check_tag.outputs.CURRENT_TAG != steps.get_version.outputs.PLATFORM_CLIENT_GO_VERSION }}
               uses: actions/github-script@v6
               env:
                 PLATFORM_CLIENT_GO_VERSION: ${{ steps.get_version.outputs.PLATFORM_CLIENT_GO_VERSION }}
               with:
                 script: |
-                  const script = require('./script/update-tag.js')
-                  script({github, context})
+                  github.rest.git.createRef({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    ref: `refs/tags/${process.env.PLATFORM_CLIENT_GO_VERSION}`,
+                    sha: context.sha
+                  })
 #            - name: Create Tag
 #              id: create_tag
 #              uses: actions/github-script@v6
