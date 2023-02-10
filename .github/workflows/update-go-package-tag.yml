@@ -1,0 +1,78 @@
+name: go package tag
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'clients.go'
+permissions:
+  contents: read
+jobs:
+    update-go-package-tag:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v3
+            - name: Get the version
+              id: get_version
+              run: |
+                echo ::set-output name=VERSION::$(grep -o 'v[0-9]\+\.[0-9]\+\.[0-9]\+' clients.go)
+            - name: Print version with github-script
+              uses: actions/github-script@v6
+              with:
+                script: |
+                  console.log('Version: ' + process.env.VERSION)
+#            - name: Create Tag
+#              id: create_tag
+#              uses: actions/github-script@v6
+#              with:
+#                github-token: ${{ secrets.GITHUB_TOKEN }}
+#                script: |
+#                  const fs = require('fs')
+#                  const version = process.env.VERSION
+#                  const tag = 'v' + version
+#                  const tag_exists = await github.rest.git.getRef({
+#                    owner: context.repo.owner,
+#                    repo: context.repo.repo,
+#                    ref: 'tags/' + tag,
+#                  }).then(() => true).catch(() => false)
+#                  if (tag_exists) {
+#                    console.log('Tag ' + tag + ' already exists')
+#                    return
+#                  }
+#                  const tag_sha = await github.rest.git.getRef({
+#                    owner: context.repo.owner,
+#                    repo: context.repo.repo,
+#                    ref: 'heads/' + context.ref,
+#                  }).then((response) => response.data.object.sha).catch((error) => {
+#                    console.log('Error getting ref ' + context.ref + ': ' + error)
+#                    core.setFailed('Error getting ref ' + context.ref + ': ' + error)
+#                  })
+#                  const tag_ref = await github.rest.git.createRef({
+#                    owner: context.repo.owner,
+#                    repo: context.repo.repo,
+#                    ref: 'refs/tags/' + tag,
+#                    sha: tag_sha,
+#                  }).then((response) => response.data.ref).catch((error) => {
+#                    console.log('Error creating tag ' + tag + ': ' + error)
+#                    core.setFailed('Error creating tag ' + tag + ': ' + error)
+#                  })
+#                  console.log('Created tag ' + tag_ref)
+#            - name: Push Tag
+#              if: steps.create_tag.outputs.tag_ref != ''
+#              uses: actions/github-script@v6
+#              with:
+#                github-token: ${{ secrets.GITHUB_TOKEN }}
+#                script: |
+#                  const fs = require('fs')
+#                  const tag_ref = process.env.TAG_REF
+#                  const tag = tag_ref.replace('refs/tags/', '')
+#                    const tag_sha = await github.rest.git.getRef({
+#                        owner: context.repo.owner,
+#                        repo: context.repo.repo,
+#                        ref: tag_ref,
+#                    }).then((response) => response.data.object.sha).catch((error) => {
+#                        console.log('Error getting ref ' + tag_ref + ': ' + error)
+#                        core.setFailed('Error getting ref ' + tag_ref + ': ' + error)
+#                    })

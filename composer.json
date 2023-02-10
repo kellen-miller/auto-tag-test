@@ -1,0 +1,11 @@
+{
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "git@github.com:kouzoh/platform-client-php.git"
+    }
+  ],
+  "require": {
+    "mercari/platform-client": "^0.3529.0"
+  }
+}
