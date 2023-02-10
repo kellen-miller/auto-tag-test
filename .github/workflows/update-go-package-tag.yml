@@ -20,8 +20,13 @@ jobs:
                 echo VERSION=$(grep -o 'v[0-9]\+\.[0-9]\+\.[0-9]\+' clients.go) >> $GITHUB_OUTPUT
             - name: Print version
               run: |
-                echo version=$VERSION
                 echo version=${{ steps.get_version.outputs.VERSION }}
+            - name: Print version from js script
+              uses: actions/github-script@v6
+              with:
+                script: |
+                  const script = require('./script/update-tag.js')
+                  console.log(script({github, context}))
 #            - name: Print version with github-script
 #              uses: actions/github-script@v6
 #              with:
