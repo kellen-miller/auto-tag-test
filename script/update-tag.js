@@ -1,5 +1,6 @@
+const fs = require('fs')
+
 module.exports = async ({github, context}) => {
-	
 	const tags = await github.rest.repos.listTags(
 		{
 			owner: context.repo.owner,
@@ -7,7 +8,6 @@ module.exports = async ({github, context}) => {
 			pattern: 'v[0-9]\+\.[0-9]\+\.[0-9]\+'
 		})
 	
-	const fs = require('fs')
 	const file = fs.readFileSync('clients.go', 'utf8')
 	const version = file.match(/v\d+\.\d+\.\d+/)
 	
