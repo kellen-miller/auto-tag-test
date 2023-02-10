@@ -32,7 +32,6 @@ jobs:
   
                   const file = fs.readFileSync('clients.go', 'utf8')
                   const version = file.match(/v\d+\.\d+\.\d+/)
-                  console.log('Version: ' + version)
   
                   response.data.forEach(tag => { 
                     if (tag.name === version) {
@@ -41,13 +40,16 @@ jobs:
                     }
                   })
                   
-                  console.log("PCGV: " + process.env.PLATFORM_CLIENT_GO_VERSION)
-                  github.rest.git.createRef({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    ref: `refs/tags/${process.env.PLATFORM_CLIENT_GO_VERSION}`,
-                    sha: context.sha
-                  })
+                  try {
+                    github.rest.git.createRef({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      ref: `refs/tags/${version}`,
+                      sha: context.sha
+                    })
+                  } catch (error) {
+                    console.log(error)
+                  }
 #            - name: Update go package tag
 #              uses: actions/github-script@v6
 #              env:
