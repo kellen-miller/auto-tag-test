@@ -6,10 +6,6 @@ on:
       - master
     paths:
       - 'clients.go'
-permissions:
-  contents:
-    - read
-    - write
 jobs:
     update-go-package-tag:
         runs-on: ubuntu-latest
