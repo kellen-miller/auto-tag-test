@@ -18,7 +18,7 @@ jobs:
               uses: actions/github-script@v6
               with:
                 script: |
-                  const script = require('./path/to/script.js')
+                  const script = require('.script/update-tag.js')
                   await script({github, context})
 #            - name: Get the version
 #              id: get_platform_client_go_version
