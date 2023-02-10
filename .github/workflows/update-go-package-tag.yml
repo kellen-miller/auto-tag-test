@@ -7,7 +7,7 @@ on:
     paths:
       - 'clients.go'
 permissions:
-  contents: read
+  contents: read|write
 jobs:
     update-go-package-tag:
         runs-on: ubuntu-latest
