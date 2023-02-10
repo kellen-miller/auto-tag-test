@@ -1,6 +1,6 @@
 const fs = require('fs')
 
-module.exports = async ({github, context}) => {
+module.exports = async function ({github, context}) {
 	const tags = await github.rest.repos.listTags(
 		{
 			owner: context.repo.owner,
