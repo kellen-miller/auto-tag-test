@@ -11,7 +11,7 @@ import (
 	mercariapiPb "github.com/kouzoh/platform-client-go/src/api-us/v1"
 )
 
-const Version = "v0.1021.0"
+const Version = "v0.1022.0"
 
 type (
 	Services struct {
