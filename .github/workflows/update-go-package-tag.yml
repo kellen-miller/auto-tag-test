@@ -35,7 +35,7 @@ jobs:
                       console.log('Tag ' + tag.name + ' already exists')
                       return
                     }
-                  }
+                  })
                   
                   console.log("PCGV: " + process.env.PLATFORM_CLIENT_GO_VERSION)
                   github.rest.git.createRef({
