@@ -20,8 +20,8 @@ jobs:
                 echo "PLATFORM_CLIENT_GO_VERSION=$(grep -o 'v[0-9]\+\.[0-9]\+\.[0-9]\+' clients.go)" >> $GITHUB_OUTPUT
             - name: Print version from js script
               uses: actions/github-script@v6
-#              env:
-#                PLATFORM_CLIENT_GO_VERSION: ${{ steps.get_version.outputs.PLATFORM_CLIENT_GO_VERSION }}
+              env:
+                PLATFORM_CLIENT_GO_VERSION: ${{ steps.get_version.outputs.PLATFORM_CLIENT_GO_VERSION }}
               with:
                 script: |
                   const script = require('./script/update-tag.js')
