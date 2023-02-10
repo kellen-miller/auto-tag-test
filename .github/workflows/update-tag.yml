@@ -1,4 +1,4 @@
-name: go package tag
+name: update tag
 on:
   push:
     branches:
@@ -9,7 +9,7 @@ on:
 permissions:
   contents: write
 jobs:
-    update-go-package-tag:
+    update-tag:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout
