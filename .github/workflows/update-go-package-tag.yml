@@ -17,12 +17,16 @@ jobs:
             - name: Get the version
               id: get_version
               run: |
-                echo ::set-output name=VERSION::$(grep -o 'v[0-9]\+\.[0-9]\+\.[0-9]\+' clients.go)
-            - name: Print version with github-script
-              uses: actions/github-script@v6
-              with:
-                script: |
-                  console.log('Version: ' + process.env.VERSION)
+                echo VERSION=$(grep -o 'v[0-9]\+\.[0-9]\+\.[0-9]\+' clients.go) >> $GITHUB_OUTPUT
+            - name: Print version
+              run: |
+                echo version=$VERSION
+                echo version=${{ steps.get_version.outputs.VERSION }}
+#            - name: Print version with github-script
+#              uses: actions/github-script@v6
+#              with:
+#                script: |
+#                  console.log('Version: ' + process.env.VERSION)
 #            - name: Create Tag
 #              id: create_tag
 #              uses: actions/github-script@v6
