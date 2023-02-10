@@ -19,7 +19,11 @@ jobs:
               uses: actions/github-script@v6
               with:
                 script: |
-                  github.rest.repos.listTags()
+                  github.rest.repos.listTags({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    pattern: 'v[0-9]\+\.[0-9]\+\.[0-9]\+'
+                  )
 #              run: |
 #                echo "CURRENT_TAG=$(git describe --contains $(git rev-parse HEAD) 2>/dev/null)"
 #                echo "CURRENT_TAG=$(git describe --contains $(git rev-parse HEAD) 2>/dev/null)" >> $GITHUB_OUTPUT
