@@ -20,7 +20,7 @@ jobs:
                 script: |
                   const fs = require('fs')
                   
-                  const tags = await github.rest.repos.listTags({
+                  const response = await github.rest.repos.listTags({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
                     pattern: 'v[0-9]\+\.[0-9]\+\.[0-9]\+'
@@ -29,8 +29,7 @@ jobs:
                   const file = fs.readFileSync('clients.go', 'utf8')
                   const version = file.match(/v\d+\.\d+\.\d+/)
   
-                  console.log("tags", tags)
-                  tags.forEach(tag => { 
+                  response.data.forEach(tag => { 
                     console.log(tag.name)
                     if (tag.name === version) {
                       console.log('Tag ' + tag.name + ' already exists')
