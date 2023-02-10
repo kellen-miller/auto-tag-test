@@ -1,5 +1,6 @@
 module.exports = ({github, context}) => {
 	console.log("hello from js script")
+	console.log(process.env)
 	console.log(process.env.PLATFORM_CLIENT_GO_VERSION)
 	
 	// const execSync = require('child_process').execSync;
