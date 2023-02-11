@@ -21,18 +21,13 @@ module.exports = async function ({github, context}) {
 		}
 	})
 	
-	try {
-		github.rest.git.createRef(
+	github.rest.git.createRef(
 			{
 				owner: context.repo.owner,
 				repo: context.repo.repo,
 				ref: `refs/tags/${version}`,
 				sha: context.sha
-			}
-		)
-	} catch (error) {
-		console.log(error)
-	}
-	
-	console.log("Tag " + version + " created")
+			})
+		.then(() => console.log("Tag " + version + " created"))
+		.catch((error) => console.log(error))
 }
