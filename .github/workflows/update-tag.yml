@@ -36,12 +36,12 @@ jobs:
                     }
                   })
                   
-                  	github.rest.git.createRef(
-                      {
-                        owner: context.repo.owner,
-                        repo: context.repo.repo,
-                        ref: `refs/tags/${version}`,
-                        sha: context.sha
-                      })
-                      .then(() => console.log("Tag " + version + " created"))
-                      .catch((error) => console.log(error))
+                  github.rest.git.createRef(
+                    {
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      ref: `refs/tags/${version}`,
+                      sha: context.sha
+                    })
+                    .then(() => console.log("Tag " + version + " created"))
+                    .catch((error) => console.log(error))
