@@ -8,7 +8,7 @@ module.exports = async function ({github, context}) {
 		console.log(
 			'No version for Go platform client found in clients.go\n',
 			'Looked for pattern: ' + tagPattern + '\n',
-			'Debug: A semver version (i.e. v1.2.3) is expected to be' +
+			'Hint: A semver version (i.e. v1.2.3) is expected to be' +
 				' declared as a constant (`const Version =' +
 				' "v.1.2.3"`) near the top of the clients.go file.' +
 				' This correlates to the platform client version' +
@@ -31,8 +31,9 @@ module.exports = async function ({github, context}) {
 	for (const tag of response.data) {
 		if (platformClientGoVersion === tag.name) {
 			console.log(
-				'Tag ' + platformClientGoVersion + ' already exists\n\n',
-				`Debug: Tags found = [${response.data.map((tag) => tag.name).join(", ")}]\n\n`,
+				'Tag ' + platformClientGoVersion + ' already exists on' +
+				' repo\n',
+				`Hint: Existing tags = [${response.data.map((tag) => tag.name).join(", ")}]\n\n`,
 				'Skipping tag creation'
 			)
 			
