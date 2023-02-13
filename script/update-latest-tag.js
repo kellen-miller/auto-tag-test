@@ -2,7 +2,7 @@ module.exports = async function ({github, context}) {
 	const tagPattern = /v\d+\.\d+\.\d+/
 	const goPlatformClientVersion = require('fs')
 		.readFileSync('clients.go', 'utf8')
-		.match(tagPattern)
+		.match(tagPattern)[0]
 	if (!goPlatformClientVersion) {
 		console.log('No version for Go platform client found in clients.go\n',
 		            'Looked for pattern: ' + tagPattern + '\n',
