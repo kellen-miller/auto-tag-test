@@ -43,6 +43,6 @@ module.exports = async function ({github, context}) {
 				ref: `refs/tags/${goPlatformClientVersion}`,
 				sha: context.sha
 			})
-		.then(() => console.log("Tag " + goPlatformClientVersion + " created"))
+		.then(() => console.log("Created Tag: " + goPlatformClientVersion))
 		.catch((error) => console.log(error))
 }
