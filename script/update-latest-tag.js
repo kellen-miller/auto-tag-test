@@ -20,42 +20,20 @@ module.exports = async function ({github, context}) {
 	console.log('Found platform-client-go version: ' + platformClientGoVersion)
 	
 	const gitCommand = 'git for-each-ref --sort=-v:refname --format="%(refname:lstrip=2)" refs/tags'
-	const tags = require('child_process').exec(
-		gitCommand,
-		(error, stdout, stderr) => {
-			if (error) {
-				console.log(`error: ${error.message}`)
-				return
-			}
-			if (stderr) {
-				console.log(`stderr: ${stderr}`)
-				return
-			}
-			console.log(`stdout: ${stdout}`)
-			console.log(stdout)
-			console.log(stdout.split('\n'))
-			return stdout.split('\n')
-		}
-	)
-	console.log(tags)
+	const tags = require('child_process')
+		.execSync(gitCommand)
+		.toString()
+		.split('\n')
+		.filter(tag => tag !== '')
 	
-	const response = await github.rest.repos.listTags(
-		{
-			owner: context.repo.owner,
-			repo: context.repo.repo,
-			pattern: tagPattern
-		}
-	)
-	
-	for (const tag of response.data) {
+	for (const tag of tags) {
 		if (platformClientGoVersion === tag.name) {
 			console.log(
 				'Tag ' + platformClientGoVersion + ' already exists on' +
 				' repo\n',
-				`Hint: Existing tags = [${response.data.map((tag) => tag.name).join(", ")}]\n\n`,
+				`Hint: Existing tags = [${tags.join(", ")}]\n\n`,
 				'Skipping tag creation'
 			)
-			
 			return
 		}
 	}
