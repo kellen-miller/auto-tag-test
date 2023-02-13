@@ -18,8 +18,8 @@ jobs:
               uses: actions/github-script@v6
               with:
                 script: |
-                  const { updateTag } = require('./script/update-tag.js')
-                  await updateTag({ context, github })
+                  const script = require('./script/update-tag.js')
+                  await script({ context, github })
 
 #                  const fs = require('fs')
 #                  const tagPattern = 'v\d+\.\d+\.\d+'

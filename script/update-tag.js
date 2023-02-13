@@ -1,4 +1,4 @@
-module.exports = async function updateTag({github, context}) {
+module.exports = async function ({github, context}) {
 	const tagPattern = 'v\d+\.\d+\.\d+'
 	const goPlatformClientVersion = require('fs')
 		.readFileSync('clients.go', 'utf8')
@@ -41,5 +41,3 @@ module.exports = async function updateTag({github, context}) {
 		.then(() => console.log("Tag " + goPlatformClientVersion + " created"))
 		.catch((error) => console.log(error))
 }
-
-module.exports = updateTag
