@@ -14,12 +14,12 @@ module.exports = async function ({github, context}) {
 	const file = fs.readFileSync('clients.go', 'utf8')
 	const version = file.match(/v\d+\.\d+\.\d+/)
 	
-	response.data.forEach(tag => {
+	for (const tag of response.data) {
 		if (tag.name === version) {
 			console.log('Tag ' + tag.name + ' already exists')
 			return
 		}
-	})
+	}
 	
 	github.rest.git.createRef(
 			{
