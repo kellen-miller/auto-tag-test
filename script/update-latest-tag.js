@@ -25,6 +25,7 @@ module.exports = async function ({github, context}) {
 	)
 	
 	for (const tag of response.data) {
+		console.log("PCGT: ", goPlatformClientVersion, "\nTag: ", tag.name, "\n\n")
 		if (goPlatformClientVersion === tag.name) {
 			console.log('Tag ' + goPlatformClientVersion +
 				            ' already exists\n\n',
@@ -48,7 +49,7 @@ module.exports = async function ({github, context}) {
 			if (error.message !== 'Reference already exists') {
 				console.log("Error creating tag", error)
 			} else {
-				console.log("Tag already exists, skipping tag creation")
+				console.log("Tag already exists")
 			}
 			console.log("\nSkipping tag creation")
 		})
