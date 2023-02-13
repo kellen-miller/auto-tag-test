@@ -18,7 +18,7 @@ jobs:
               uses: actions/github-script@v6
               with:
                 script: |
-                  const { updateTag } = require('script/update-tag.js')
+                  const { updateTag } = require('./script/update-tag.js')
                   await updateTag({ context, github })
 
 #                  const fs = require('fs')
