@@ -44,5 +44,10 @@ module.exports = async function ({github, context}) {
 				sha: context.sha
 			})
 		.then(() => console.log("Created Tag: " + goPlatformClientVersion))
-		.catch((error) => console.log(error))
+		.catch((error) => {
+			if (error.message !== 'Reference already exists') {
+				console.log("Error creating tag, skipping tag" +
+					            " creation\n", error)
+			}
+		})
 }
