@@ -20,35 +20,3 @@ jobs:
                 script: |
                   const script = require('./script/update-tag.js')
                   await script({ context, github })
-
-#                  const fs = require('fs')
-#                  const tagPattern = 'v\d+\.\d+\.\d+'
-#
-#                  const response = await github.rest.repos.listTags({
-#                    owner: context.repo.owner,
-#                    repo: context.repo.repo,
-#                    pattern: tagPattern
-#                  })
-#
-#                  const file = fs.readFileSync('clients.go', 'utf8')
-#                  const version = file.match(new RegExp(tagPattern))
-#                  if (!version || version.length === 0) {
-#                    console.log('No version found in clients.go')
-#                  }
-#
-#                  for (const tag of response.data) {
-#                    if (tag.name === version) {
-#                      console.log('Tag ' + tag.name + ' already exists')
-#                      return
-#                    }
-#                  }
-#
-#                  github.rest.git.createRef(
-#                    {
-#                      owner: context.repo.owner,
-#                      repo: context.repo.repo,
-#                      ref: `refs/tags/${version}`,
-#                      sha: context.sha
-#                    })
-#                    .then(() => console.log("Tag " + version + " created"))
-#                    .catch((error) => console.log(error))

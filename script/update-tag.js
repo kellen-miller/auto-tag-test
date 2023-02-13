@@ -2,11 +2,11 @@ module.exports = async function ({github, context}) {
 	const tagPattern = 'v\d+\.\d+\.\d+'
 	const goPlatformClientVersion = require('fs')
 		.readFileSync('clients.go', 'utf8')
-		.match(new RegExp(tagPattern))
+		.match(tagPattern)
 	if (!goPlatformClientVersion) {
 		console.log('No version for Go platform client found in clients.go\n',
 		            'Looked for pattern: ' + tagPattern + '\n',
-		            'Info: A semver version (i.e. v1.2.3) is expected to be' +
+		            'Debug: A semver version (i.e. v1.2.3) is expected to be' +
 			            ' declared as a constant (`const Version =' +
 			            ' "v.1.2.3"`) near the top of the clients.go file.' +
 			            ' This correlates to the platform client version' +
@@ -14,6 +14,7 @@ module.exports = async function ({github, context}) {
 		            'Skipping tag creation')
 		return
 	}
+	console.log('Found Go platform client version: ' + goPlatformClientVersion)
 	
 	const response = await github.rest.repos.listTags(
 		{
@@ -24,9 +25,13 @@ module.exports = async function ({github, context}) {
 	)
 	
 	for (const tag of response.data) {
-		if (tag.name === goPlatformClientVersion) {
-			console.log('Tag ' + tag.name + ' already exists\n',
+		if (goPlatformClientVersion === tag.name) {
+			console.log('Tag ' + goPlatformClientVersion +
+				            ' already exists\n\n',
+			            `Debug: Tags found for this repo:
+			            ${response.data.map((tag) => tag.name)}\n\n`,
 			            'Skipping tag creation')
+			
 			return
 		}
 	}
