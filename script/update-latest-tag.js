@@ -34,7 +34,7 @@ module.exports = async function ({github, context}) {
 			return stdout.split('\n')
 		}
 	)
-	console.log('Existing tags: ' + tags)
+	console.log(tags)
 	
 	const response = await github.rest.repos.listTags(
 		{
