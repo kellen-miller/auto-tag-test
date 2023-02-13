@@ -17,8 +17,24 @@ module.exports = async function ({github, context}) {
 		)
 		return
 	}
-	
 	console.log('Found platform-client-go version: ' + platformClientGoVersion)
+	
+	const gitCommand = 'git for-each-ref --sort=-v:refname --format="%(refname:lstrip=2)" refs/tags'
+	const tags = require('child_process').exec(
+		gitCommand,
+		(error, stdout, stderr) => {
+			if (error) {
+				console.log(`error: ${error.message}`)
+				return
+			}
+			if (stderr) {
+				console.log(`stderr: ${stderr}`)
+				return
+			}
+			return stdout.split('\n')
+		}
+	)
+	console.log('Existing tags: ' + tags)
 	
 	const response = await github.rest.repos.listTags(
 		{
