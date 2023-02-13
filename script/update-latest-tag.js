@@ -31,6 +31,9 @@ module.exports = async function ({github, context}) {
 				console.log(`stderr: ${stderr}`)
 				return
 			}
+			console.log(`stdout: ${stdout}`)
+			console.log(stdout)
+			console.log(stdout.split('\n'))
 			return stdout.split('\n')
 		}
 	)
