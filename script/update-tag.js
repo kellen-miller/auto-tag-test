@@ -1,5 +1,5 @@
 module.exports = async function ({github, context}) {
-	const tagPattern = 'v\d+\.\d+\.\d+'
+	const tagPattern = /v\d+\.\d+\.\d+/
 	const goPlatformClientVersion = require('fs')
 		.readFileSync('clients.go', 'utf8')
 		.match(tagPattern)
