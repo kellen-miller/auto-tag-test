@@ -7,9 +7,13 @@ module.exports = async function ({github, context}) {
 	console.log("Repo tags: " + JSON.stringify(repoTags))
 
 	let latestTags = getLatestTagsForMajorVersions(repoTags)
-	latestTags = updateMinorVersions(latestTags, majorVersionsUpdated(context))
+	console.log("Latest tags for major: " + JSON.stringify(latestTags))
+	const mvu = majorVersionsUpdated(context)
+	console.log("Major versions updated: " + JSON.stringify(majorVersionsUpdated))
+	latestTags = updateMinorVersions(latestTags, mvu)
+	console.log("Latest tags for major after minor update: " + JSON.stringify(latestTags))
 	latestTags = setPatchVersion(latestTags)
-	
+	console.log("Latest tags for major after patch update: " + JSON.stringify(latestTags))
 	buildTags(latestTags).forEach(tag => createTag(github, context, tag))
 }
 
