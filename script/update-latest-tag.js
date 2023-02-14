@@ -1,46 +1,21 @@
 const fs = require('fs')
+const proc = require('child_process')
 
-// format = "v{major}.{minor}.{patch}"
-// major = "src/Grpc/Services/Mercari/Platform/Apius' versions
-// minor = "increment from last tag"
-// patch = "platform-proto minor version"
-// if platform-proto has a patch version, add -{patch} to end of tag
 module.exports = async function ({github, context}) {
-	const allTags = execGitCmd("git tag --list --sort=-v:refname")
-	const tagsOldWay = execGitCmd(
-		'git for-each-ref --sort=-v:refname --format="%(refname:lstrip=2)"' +
-		' refs/tags')
-	console.log("All tags: " + allTags)
-	console.log("All tags old way: " + tagsOldWay)
+	const repoTags = execGitCmd("git tag --list --sort=-v:refname")
+		.map(tag => tag.split("."))
+	console.log("Repo tags: " + JSON.stringify(repoTags))
 	
-	
-	console.log("Fetching before sha: " + context.payload.before)
-	execGitCmd(`git fetch origin ${context.payload.before} --depth=1`)
-	const allTags2 = execGitCmd("git tag --list --sort=-v:refname")
-	const tagsOldWay2 = execGitCmd(
-		'git for-each-ref --sort=-v:refname --format="%(refname:lstrip=2)"' +
-		' refs/tags')
-	console.log("All tags2: " + allTags2)
-	console.log("All tags old way2: " + tagsOldWay2)
-	
-	
-	if (allTags.length === 0) {
-		allTags.push(["v0", "0", "0"])
-	}
-	
-	let latestTags = getLatestTagsForMajorVersions(allTags)
-	latestTags = updateMinorVersion(
-		latestTags, majorVersionsUpdated(context, latestTags))
+	let latestTags = getLatestTagsForMajorVersions(repoTags)
+	latestTags = updateMinorVersions(latestTags, majorVersionsUpdated(context))
 	latestTags = setPatchVersion(latestTags)
 	
-	for (const tag of buildTags(latestTags)) {
-		createTag(github, context, tag)
-	}
+	buildTags(latestTags).forEach(tag => createTag(github, context, tag))
 }
 
 function execGitCmd(gitCmd) {
 	try {
-		return require('child_process')
+		return proc
 			.execSync(gitCmd)
 			.toString()
 			.split('\n')
@@ -62,9 +37,11 @@ function diffFileNames(before, sha) {
 	output.sort((a, b) => {
 		const aPathLength = a.split("/").length
 		const bPathLength = b.split("/").length
+		
 		if (aPathLength === bPathLength) {
 			return a.localeCompare(b)
 		}
+		
 		return aPathLength - bPathLength
 	})
 	
@@ -84,48 +61,34 @@ function getLatestTagsForMajorVersions(tags) {
 	return majorVersionLatestTags
 }
 
-function majorVersionsUpdated(context, latestTags) {
+function majorVersionsUpdated(context) {
 	const majorsUpdated = new Set()
 	const grpcServicesPath = "src/Grpc/Services/Mercari/Platform/Apius"
 	const diffFiles = diffFileNames(context.payload.before, context.sha)
-	let updateAllVersions = false
 	
 	for (const filePath of diffFiles) {
 		const pathParts = filePath.split("/")
-		if (pathParts.length === 7 && filePath.includes(grpcServicesPath)) {
-			updateAllVersions = true
-			// still need to loop in case a new major version directory was
-			// added. Version would not be in the latest tags map.
-		} else if (updateAllVersions ||
-			(pathParts.length >= 8 && filePath.includes(grpcServicesPath))) {
+		if (pathParts.length >= 8 && filePath.includes(grpcServicesPath)) {
 			majorsUpdated.add(pathParts[6].toLowerCase())
-		}
-	}
-	
-	if (updateAllVersions) { // update all previous major versions
-		for (const majorVersion of latestTags.keys()) {
-			majorsUpdated.add(majorVersion)
 		}
 	}
 	
 	return majorsUpdated
 }
 
-function updateMinorVersion(latestTagsForMajorVersion, majorVersionsUpdated) {
+function updateMinorVersions(latestTagsForMajorVersion, majorVersionsUpdated) {
 	for (const majorVersion of majorVersionsUpdated) {
 		let latestTag = latestTagsForMajorVersion.get(majorVersion)
-		if (!latestTag) {
-			latestTagsForMajorVersion.set(
-				majorVersion,
-				[majorVersion, "0", "0"],
-			)
-			continue
+		let minorVersion = 0
+		let patchVersion = "0"
+		
+		if (latestTag) {
+			minorVersion = parseInt(latestTag[1]) + 1
+			patchVersion = latestTag[2]
 		}
 		
-		const incrementedMinorVersion = parseInt(latestTag[1]) + 1
-		latestTagsForMajorVersion.set(
-			majorVersion,
-			[latestTag[0], incrementedMinorVersion.toString(), latestTag[2]],
+		latestTagsForMajorVersion.set(majorVersion,
+			[majorVersion, minorVersion.toString(), patchVersion],
 		)
 	}
 	
@@ -133,18 +96,18 @@ function updateMinorVersion(latestTagsForMajorVersion, majorVersionsUpdated) {
 }
 
 function setPatchVersion(tags) {
-	const platformClientVersion = getGoModVer()
-	const pcVersionParts = platformClientVersion.split('.')
-	const pcMinorVersion = pcVersionParts[1]
-	const pcPatchVersion = pcVersionParts[2]
+	const platformClientGoVersion = getPlatformClientGoVersion()
+	const pcgParts = platformClientGoVersion.split('.')
+	const pcgMinor = pcgParts[1]
+	const pcgPatch = pcgParts[2]
 	
-	let patch = pcMinorVersion
-	if (pcPatchVersion && pcPatchVersion !== '0') {
-		patch += '-' + pcPatchVersion
+	let tagPatchVersion = pcgMinor
+	if (pcgPatch && pcgPatch !== '0') {
+		tagPatchVersion += '-' + pcgPatch
 	}
 	
 	for (const [majorVersion, tag] of tags) {
-		tags.set(majorVersion, [tag[0], tag[1], patch])
+		tags.set(majorVersion, [tag[0], tag[1], tagPatchVersion])
 	}
 	
 	return tags
@@ -152,9 +115,7 @@ function setPatchVersion(tags) {
 
 function buildTags(tags) {
 	const builtTags = []
-	for (const tag of tags.values()) {
-		builtTags.push(tag.join('.'))
-	}
+	tags.values().forEach(tag => builtTags.push(tag.join('.')))
 	return builtTags
 }
 
@@ -169,7 +130,7 @@ function getVersionFromFile(filePath, regex, delimiter, indexAfterSplit) {
 	}
 }
 
-function getGoModVer() {
+function getPlatformClientGoVersion() {
 	const goModRegex = 'github.com/kouzoh/platform-client-go v\\d+\\.\\d+\.\\d+'
 	const goModVersion = getVersionFromFile(
 		"go.mod",
