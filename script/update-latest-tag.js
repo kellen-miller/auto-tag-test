@@ -179,17 +179,17 @@ function getGoModVer() {
 	return goModVersion
 }
 
-function createTag(github, tag) {
+function createTag(github, context, tag) {
 	github.rest.git.createRef(
 			{
 				owner: context.repo.owner,
 				repo: context.repo.repo,
 				ref: `refs/tags/${tag}`,
-				sha: sha
+				sha: sha,
 			})
 		.then(() => console.log("Created Tag: " + tag))
 		.catch((error) => {
-			if (error.message === 'Reference already exists') {
+			if (error.message === "Reference already exists") {
 				console.warn(`Tag ${tag} already exists`)
 			} else {
 				console.error(`Error creating tag ${tag}`, error)
