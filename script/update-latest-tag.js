@@ -9,7 +9,7 @@ module.exports = async function ({github, context}) {
 	const allTags = execGitCmd('git tag --list --sort=-v:refname')
 		.map(tag => tag.split('.'))
 	if (allTags.length === 0) {
-		allTags.push([['v0', '0', '0']])
+		allTags.push(["v0", "0", "0"])
 	}
 	
 	let latestTags = getLatestTagsForMajorVersions(allTags)
