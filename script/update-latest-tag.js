@@ -6,6 +6,15 @@ module.exports = async function ({github, context}) {
 		.map(tag => tag.split("."))
 	console.log("Repo tags: " + JSON.stringify(repoTags))
 	
+	const tagsFromGH = await github.rest.repos.listTags(
+		{
+			owner: context.repo.owner,
+			repo: context.repo.repo,
+			pattern: 'v*'
+		}
+	)
+	console.log("Tags from GH: " + JSON.stringify(tagsFromGH.data))
+	
 	let latestTags = getLatestTagsForMajorVersions(repoTags)
 	latestTags = updateMinorVersions(latestTags, majorVersionsUpdated(context))
 	latestTags = setPatchVersion(latestTags)
@@ -115,7 +124,9 @@ function setPatchVersion(tags) {
 
 function buildTags(tags) {
 	const builtTags = []
-	tags.values().forEach(tag => builtTags.push(tag.join('.')))
+	for (const tag of tags.values()) {
+		builtTags.push(tag.join('.'))
+	}
 	return builtTags
 }
 
