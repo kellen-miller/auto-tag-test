@@ -2,23 +2,10 @@ const fs = require('fs')
 const proc = require('child_process')
 
 module.exports = async function ({github, context}) {
-	const repoTags = execGitCmd("git tag --list --sort=-v:refname")
-		.map(tag => tag.split("."))
-	console.log("Repo tags: " + JSON.stringify(repoTags))
-	
-	const tagsFromGH = await github.rest.repos.listTags(
-		{
-			owner: context.repo.owner,
-			repo: context.repo.repo,
-			pattern: 'v*'
-		}
-	)
-	console.log("Tags from GH: " + JSON.stringify(tagsFromGH.data.map(tag => tag.name)))
-	
-	const tagsWithLS = execGitCmd('git ls-remote --tags --sort=-v:refname')
+	const repoTags = execGitCmd('git ls-remote --tags --sort=-v:refname')
 		.map(tag => tag.split("/")[2])
-	console.log("Tags with ls: " + JSON.stringify(tagsWithLS))
-	
+	console.log("Repo tags: " + JSON.stringify(repoTags))
+
 	let latestTags = getLatestTagsForMajorVersions(repoTags)
 	latestTags = updateMinorVersions(latestTags, majorVersionsUpdated(context))
 	latestTags = setPatchVersion(latestTags)
