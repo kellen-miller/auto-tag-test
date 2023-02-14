@@ -8,7 +8,8 @@ const fs = require('fs')
 module.exports = async function ({github, context}) {
 	const allTags = execGitCmd("git tag --list --sort=-v:refname")
 	const tagsOldWay = execGitCmd(
-		"git for-each-ref --sort=-v:refname --format=\"%(refname:lstrip=2)\" refs/tags")
+		'git for-each-ref --sort=-v:refname --format="%(refname:lstrip=2)"' +
+		' refs/tags')
 	console.log("All tags: " + allTags)
 	console.log("All tags old way: " + tagsOldWay)
 	
@@ -17,7 +18,8 @@ module.exports = async function ({github, context}) {
 	execGitCmd(`git fetch origin ${context.payload.before} --depth=1`)
 	const allTags2 = execGitCmd("git tag --list --sort=-v:refname")
 	const tagsOldWay2 = execGitCmd(
-		"git for-each-ref --sort=-v:refname --format=\"%(refname:lstrip=2)\" refs/tags")
+		'git for-each-ref --sort=-v:refname --format="%(refname:lstrip=2)"' +
+		' refs/tags')
 	console.log("All tags2: " + allTags2)
 	console.log("All tags old way2: " + tagsOldWay2)
 	
