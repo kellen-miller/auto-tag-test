@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/golang/mock v1.6.0
-	github.com/kouzoh/platform-client-go v0.1234.0
+	github.com/kouzoh/platform-client-go v0.3535.0
 	google.golang.org/grpc v1.45.0
 )
 
