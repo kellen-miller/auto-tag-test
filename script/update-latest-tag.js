@@ -6,9 +6,26 @@ const fs = require('fs')
 // patch = "platform-proto minor version"
 // if platform-proto has a patch version, add -{patch} to end of tag
 module.exports = async function ({github, context}) {
-	const allTags = execGitCmd('git tag --list --sort=-v:refname')
-		.map(tag => tag.split('.'))
+	const allTags = execGitCmd("git tag --list --sort=-v:refname")
+		.map(tag => tag.split("."))
+	const tagsOldWay = execGitCmd(
+		"git for-each-ref --sort=-v:refname --format=\"%(refname:lstrip=2)\" refs/tags")
+		.map(tag => tag.split("."))
 	console.log("All tags: " + allTags)
+	console.log("All tags old way: " + tagsOldWay)
+	
+	
+	console.log("Fetching before sha: " + context.payload.before)
+	execGitCmd(`git fetch origin ${context.payload.before} --depth=1`)
+	const allTags2 = execGitCmd("git tag --list --sort=-v:refname")
+		.map(tag => tag.split("."))
+	const tagsOldWay2 = execGitCmd("git for-each-ref --sort=-v:refname" +
+		                               " --format=\"%(refname:lstrip=2)\" refs/tags")
+		.map(tag => tag.split("."))
+	console.log("All tags2: " + allTags2)
+	console.log("All tags old way2: " + tagsOldWay2)
+	
+	
 	if (allTags.length === 0) {
 		allTags.push(["v0", "0", "0"])
 	}
