@@ -7,7 +7,7 @@ on:
     paths:
       - 'go.mod'
       - 'clients.go'
-      - 'src/Grpc/Services/Mercari/Platform/Apius'
+      - 'src/Grpc/Services/Mercari/Platform/Apius/**'
 permissions:
   contents: write
 jobs:
