@@ -81,11 +81,15 @@ module.exports = async function ({github, context}) {
 }
 
 function execGitCmd(gitCmd) {
-	return require('child_process')
-		.execSync(gitCmd)
-		.toString()
-		.split('\n')
-		.filter(line => line !== '')
+	try {
+		return require('child_process')
+			.execSync(gitCmd)
+			.toString()
+			.split('\n')
+			.filter(line => line !== '')
+	} catch (error) {
+		return []
+	}
 }
 
 function getVersionFromFile(filePath, regex, delimiter, indexAfterSplit) {
