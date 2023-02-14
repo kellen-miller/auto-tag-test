@@ -179,7 +179,7 @@ function getGoModVer() {
 	return goModVersion
 }
 
-function createTag(github, context, tag) {
+function createTag(github, context, tag, sha) {
 	github.rest.git.createRef(
 			{
 				owner: context.repo.owner,
