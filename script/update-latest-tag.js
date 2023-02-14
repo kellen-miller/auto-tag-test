@@ -6,8 +6,9 @@ const fs = require('fs')
 // patch = "platform-proto minor version"
 // if platform-proto has a patch version, add -{patch} to end of tag
 module.exports = async function ({github, context}) {
-	console.log("context", context)
-	console.log("changedFiles", getChangedFiles(""))
+	console.log(process.env)
+	// const fileDiff = execGitCmd(`git diff --name-only ${context.payload.before} ${context.sha}`)
+	// console.log("fileDiff", fileDiff)
 	
 	const goModVersion = getGoModVer()
 	if (!goModVersion) {
@@ -27,7 +28,7 @@ module.exports = async function ({github, context}) {
 		return
 	}
 	
-	const tags = getRepoTags()
+	const tags = execGitCmd('git tag -l --sort=-v:refname')
 	for (const tag of tags) {
 		if (goModVersion === tag.name) {
 			console.log(
@@ -56,6 +57,14 @@ module.exports = async function ({github, context}) {
 			
 			console.log("\nSkipping tag creation")
 		})
+}
+
+function execGitCmd(gitCmd) {
+	return require('child_process')
+		.execSync(gitCmd)
+		.toString()
+		.split('\n')
+		.filter(line => line !== '')
 }
 
 function getVersionFromFile(filePath, regex, delimiter, indexAfterSplit) {
@@ -116,24 +125,4 @@ function getClientsGoVer() {
 	
 	console.log('clients.go platform-client-go version: ' + clientsGoVersion)
 	return clientsGoVersion
-}
-
-function getRepoTags() {
-	// '-v:refname' => sort by version, prefix reverses order (i.e. descending)
-	// const gitCmd = 'git for-each-ref --sort=-v:refname --format="%(refname:lstrip=2)" refs/tags'
-	const gitCmd = 'git tag -l --sort=-v:refname'
-	return require('child_process')
-		.execSync(gitCmd)
-		.toString()
-		.split('\n')
-		.filter(tag => tag !== '')
-}
-
-function getChangedFiles(branch) {
-	const gitCmd = `git diff --name-only origin/main`
-	return require('child_process')
-		.execSync(gitCmd)
-		.toString()
-		.split('\n')
-		.filter(file => file !== '')
 }
