@@ -6,30 +6,12 @@ const fs = require('fs')
 // patch = "platform-proto minor version"
 // if platform-proto has a patch version, add -{patch} to end of tag
 module.exports = async function ({github, context}) {
-	// const fileDiff = execGitCmd(`git diff --name-only ${context.payload.before} ${sha}`)
-	// console.log("fileDiff", fileDiff)
 	const before = context.payload.before
 	const sha = context.sha
-	
-	const gitFetch = execGitCmd(`git fetch origin ${before} --depth=1`) 
-	console.log("gitFetch", gitFetch)
-	
-	const cmd4 = `git diff-tree --no-commit-id --name-only -r ${sha}`
-	console.log(cmd4, execGitCmd(cmd4))
-	
-	const cmd3 = `git diff --name-only ${before} ${sha}`
-	console.log(cmd3, execGitCmd(cmd3))
-	
-	const cmd1 = "git diff --name-only origin/main HEAD"
-	console.log(cmd1, execGitCmd(cmd1))
-	
-	const cmd2 = `git diff --name-only main ${sha}`
-	console.log(cmd2, execGitCmd(cmd2))
-	
-	const cmd6 = `git diff --name-only origin/main ${sha}`
-	console.log(cmd6, execGitCmd(cmd6))
-	
-	return
+	const filesChanged = getDiffFileNames(before, sha)
+	if (filesChanged.length === 0) {
+		return
+	}
 	
 	const goModVersion = getGoModVer()
 	if (!goModVersion) {
@@ -90,6 +72,17 @@ function execGitCmd(gitCmd) {
 	} catch (error) {
 		return []
 	}
+}
+
+function getDiffFileNames(before, sha) {
+	execGitCmd(`git fetch origin ${before} --depth=1`)
+	const output = execGitCmd(`git diff --name-only ${before} ${sha}`)
+	if (output.length === 0) {
+		console.log('No file changes detected')
+		return []
+	}
+	
+	return output[0]
 }
 
 function getVersionFromFile(filePath, regex, delimiter, indexAfterSplit) {
