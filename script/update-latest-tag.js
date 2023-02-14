@@ -7,7 +7,7 @@ const fs = require('fs')
 // if platform-proto has a patch version, add -{patch} to end of tag
 module.exports = async function ({github, context}) {
 	console.log("changedFiles", getChangedFiles(context.sha))
-	console.log("context", context)
+	// console.log("context", context)
 	
 	const goModVersion = getGoModVer()
 	if (!goModVersion) {
