@@ -155,15 +155,16 @@ function getVersionFromFile(filePath, regex, delimiter, indexAfterSplit) {
 function getGoModVer() {
 	const goModRegex = 'github.com/kouzoh/platform-client-go v\\d+\\.\\d+\.\\d+'
 	const goModVersion = getVersionFromFile(
-		'../go.mod',
+		"go.mod",
 		goModRegex,
-		' ',
-		1)
+		" ",
+		1,
+	)
 	
 	if (!goModVersion) {
 		throw new Error(
-			'No version for Go platform client found in clients.go\n' +
-			'Looked for pattern: ' + goModRegex + '\n' +
+			"No version for Go platform client found in go.mod\n" +
+			"Looked for pattern: " + goModRegex + '\n' +
 			"Hint: The github.com/kouzoh/platform-client-go dependency is" +
 			" expected to be declared in the go.mod file. The semver version" +
 			" (i.e. v1.2.3) is used to create a release tag. The" +
