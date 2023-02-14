@@ -1,15 +1,18 @@
-const fs = require('fs')
-const proc = require('child_process')
+const fs = require("fs")
+const proc = require("child_process")
 
-module.exports = async function ({github, context}) {
-	const repoTags = execGitCmd('git ls-remote --tags --sort=-v:refname')
+module.exports = async function({ github, context }) {
+	const repoTags = execGitCmd("git ls-remote --tags --sort=-v:refname")
 		.map(tag => tag.split("/")[2].split(".")) // "refs/tags/v1.0.0" -> ["v1", "0", "0"]
-
-	let latestTags = getLatestTagsForMajorVersions(repoTags)
-	const mvu = majorVersionsUpdated(context)
-	latestTags = updateMinorVersions(latestTags, mvu)
-	latestTags = setPatchVersion(latestTags)
-	buildTags(latestTags).forEach(tag => createTag(github, context, tag))
+	
+	// tagsForMajorVersions = {v1: [v1, 2, 3]} where v1.2.3 is the latest tag for major version v1
+	let tagsForMajorVersions = getLatestTagsForMajorVersions(repoTags)
+	tagsForMajorVersions = updateMinorVersions(
+		majorVersionsWithUpdates(context), tagsForMajorVersions)
+	tagsForMajorVersions = setPatchVersion(tagsForMajorVersions)
+	
+	buildTags(tagsForMajorVersions)
+		.forEach(tag => createTag(github, context, tag))
 }
 
 function execGitCmd(gitCmd) {
@@ -17,8 +20,8 @@ function execGitCmd(gitCmd) {
 		return proc
 			.execSync(gitCmd)
 			.toString()
-			.split('\n')
-			.filter(line => line !== '')
+			.split("\n")
+			.filter(line => line !== "")
 	} catch (error) {
 		console.error("Error executing git command: " + gitCmd, error)
 		return []
@@ -33,6 +36,7 @@ function diffFileNames(before, sha) {
 		return []
 	}
 	
+	// sort by path length, the shortest first (ascending order)
 	output.sort((a, b) => {
 		const aPathLength = a.split("/").length
 		const bPathLength = b.split("/").length
@@ -60,7 +64,7 @@ function getLatestTagsForMajorVersions(tags) {
 	return majorVersionLatestTags
 }
 
-function majorVersionsUpdated(context) {
+function majorVersionsWithUpdates(context) {
 	const majorsUpdated = new Set()
 	const grpcServicesPath = "src/Grpc/Services/Mercari/Platform/Apius"
 	const diffFiles = diffFileNames(context.payload.before, context.sha)
@@ -75,9 +79,9 @@ function majorVersionsUpdated(context) {
 	return majorsUpdated
 }
 
-function updateMinorVersions(latestTagsForMajorVersion, majorVersionsUpdated) {
+function updateMinorVersions(majorVersionsUpdated, tagsForMajorVersions) {
 	for (const majorVersion of majorVersionsUpdated) {
-		let latestTag = latestTagsForMajorVersion.get(majorVersion)
+		let latestTag = tagsForMajorVersions.get(majorVersion)
 		let minorVersion = 0
 		let patchVersion = "0"
 		
@@ -86,23 +90,58 @@ function updateMinorVersions(latestTagsForMajorVersion, majorVersionsUpdated) {
 			patchVersion = latestTag[2]
 		}
 		
-		latestTagsForMajorVersion.set(majorVersion,
-			[majorVersion, minorVersion.toString(), patchVersion],
+		tagsForMajorVersions.set(majorVersion, [majorVersion, minorVersion.toString(), patchVersion])
+	}
+	
+	return tagsForMajorVersions
+}
+
+function getVersionFromFile(filePath, regex, delimiter, indexAfterSplit) {
+	try {
+		return fs
+			.readFileSync(filePath, "utf8")
+			.match(regex)[0]
+			.split(delimiter)[indexAfterSplit]
+	} catch (error) {
+		return ""
+	}
+}
+
+function getPlatformClientGoVersion() {
+	const goModRegex = "github.com/kouzoh/platform-client-go v\\d+\\.\\d+\.\\d+"
+	const goModVersion = getVersionFromFile(
+		"go.mod",
+		goModRegex,
+		" ",
+		1,
+	)
+	
+	if (!goModVersion) {
+		throw new Error(
+			"No version for Go platform client found in go.mod\n" +
+			"Looked for pattern: " + goModRegex + "\n" +
+			"Hint: The github.com/kouzoh/platform-client-go dependency is" +
+			" expected to be declared in the go.mod file. The semver version" +
+			" (i.e. v1.2.3) is used to create a release tag. The" +
+			" GrpcClientsGenerator updates the Go platform-client based on" +
+			" the PHP platform-client in mercari-api's composer.json" +
+			" dependencies\n\n" +
+			"Skipping tag creation"
 		)
 	}
 	
-	return latestTagsForMajorVersion
+	console.log("go.mod platform-client-go version: " + goModVersion)
+	return goModVersion
 }
 
 function setPatchVersion(tags) {
 	const platformClientGoVersion = getPlatformClientGoVersion()
-	const pcgParts = platformClientGoVersion.split('.')
-	const pcgMinor = pcgParts[1]
-	const pcgPatch = pcgParts[2]
+	const pcgParts = platformClientGoVersion.split(".")
+	const pcgPatchVersion = pcgParts[2]
 	
-	let tagPatchVersion = pcgMinor
-	if (pcgPatch && pcgPatch !== '0') {
-		tagPatchVersion += '-' + pcgPatch
+	let tagPatchVersion = pcgParts[1]
+	if (pcgPatchVersion && pcgPatchVersion !== "0") {
+		tagPatchVersion += "-" + pcgPatchVersion
 	}
 	
 	for (const [majorVersion, tag] of tags) {
@@ -115,49 +154,11 @@ function setPatchVersion(tags) {
 function buildTags(tags) {
 	const builtTags = []
 	for (const tagParts of tags.values()) {
-		const t = tagParts.join('.')
+		const t = tagParts.join(".")
 		console.log("built tag: " + t)
 		builtTags.push(t)
 	}
 	return builtTags
-}
-
-function getVersionFromFile(filePath, regex, delimiter, indexAfterSplit) {
-	try {
-		return fs
-			.readFileSync(filePath, 'utf8')
-			.match(regex)[0]
-			.split(delimiter)[indexAfterSplit]
-	} catch (error) {
-		return ""
-	}
-}
-
-function getPlatformClientGoVersion() {
-	const goModRegex = 'github.com/kouzoh/platform-client-go v\\d+\\.\\d+\.\\d+'
-	const goModVersion = getVersionFromFile(
-		"go.mod",
-		goModRegex,
-		" ",
-		1,
-	)
-	
-	if (!goModVersion) {
-		throw new Error(
-			"No version for Go platform client found in go.mod\n" +
-			"Looked for pattern: " + goModRegex + '\n' +
-			"Hint: The github.com/kouzoh/platform-client-go dependency is" +
-			" expected to be declared in the go.mod file. The semver version" +
-			" (i.e. v1.2.3) is used to create a release tag. The" +
-			" GrpcClientsGenerator updates the Go platform-client based on" +
-			" the PHP platform-client in mercari-api's composer.json" +
-			" dependencies\n\n" +
-			'Skipping tag creation'
-		)
-	}
-	
-	console.log('go.mod platform-client-go version: ' + goModVersion)
-	return goModVersion
 }
 
 function createTag(github, context, tag) {
