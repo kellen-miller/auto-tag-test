@@ -6,6 +6,7 @@ const fs = require('fs')
 // patch = "platform-proto minor version"
 // if platform-proto has a patch version, add -{patch} to end of tag
 module.exports = async function ({github, context}) {
+	console.log("changedFiles", getChangedFiles())
 	console.log("context", context)
 	
 	const goModVersion = getGoModVer()
@@ -126,4 +127,13 @@ function getRepoTags() {
 		.toString()
 		.split('\n')
 		.filter(tag => tag !== '')
+}
+
+function getChangedFiles() {
+	const gitCmd = 'git diff --name-only HEAD^ HEAD'
+	return require('child_process')
+		.execSync(gitCmd)
+		.toString()
+		.split('\n')
+		.filter(file => file !== '')
 }
