@@ -46,6 +46,7 @@ function execGitCmd(gitCmd) {
 			.split('\n')
 			.filter(line => line !== '')
 	} catch (error) {
+		console.error("Error executing git command: " + gitCmd, error)
 		return []
 	}
 }
