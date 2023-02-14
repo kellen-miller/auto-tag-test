@@ -1,4 +1,6 @@
 const script = require('../script/update-latest-tag.js')
+
+const github = {}
 const context = {
 	sha: 'sha',
 	payload: {
@@ -6,5 +8,5 @@ const context = {
 	}
 }
 
-script({  })
+script({ github, context })
 	.then( r => console.log("done", r) )

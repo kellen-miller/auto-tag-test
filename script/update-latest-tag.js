@@ -98,7 +98,7 @@ function setPatchVersion(tags) {
 	const pcPatchVersion = pcVersionParts[2]
 	
 	let patch = pcMinorVersion
-	if (pcPatchVersion) {
+	if (pcPatchVersion && pcPatchVersion !== '0') {
 		patch += '-' + pcPatchVersion
 	}
 	
@@ -131,7 +131,7 @@ function getVersionFromFile(filePath, regex, delimiter, indexAfterSplit) {
 function getGoModVer() {
 	const goModRegex = 'github.com/kouzoh/platform-client-go v\\d+\\.\\d+\.\\d+'
 	const goModVersion = getVersionFromFile(
-		'go.mod',
+		'../go.mod',
 		goModRegex,
 		' ',
 		1)
