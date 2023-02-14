@@ -2,10 +2,10 @@ const script = require('../script/update-latest-tag.js')
 
 const github = {}
 const context = {
-	sha: 'sha',
+	sha: "HEAD",
 	payload: {
-		before: 'before'
-	}
+		before: "origin/main",
+	},
 }
 
 script({ github, context })
