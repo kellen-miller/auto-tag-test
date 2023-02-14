@@ -4,16 +4,11 @@ const proc = require('child_process')
 module.exports = async function ({github, context}) {
 	const repoTags = execGitCmd('git ls-remote --tags --sort=-v:refname')
 		.map(tag => tag.split("/")[2].split(".")) // "refs/tags/v1.0.0" -> ["v1", "0", "0"]
-	console.log("Repo tags: " + JSON.stringify(repoTags))
 
 	let latestTags = getLatestTagsForMajorVersions(repoTags)
-	console.log("Latest tags for major: " + JSON.stringify(latestTags))
 	const mvu = majorVersionsUpdated(context)
-	console.log("Major versions updated: " + JSON.stringify(majorVersionsUpdated))
 	latestTags = updateMinorVersions(latestTags, mvu)
-	console.log("Latest tags for major after minor update: " + JSON.stringify(latestTags))
 	latestTags = setPatchVersion(latestTags)
-	console.log("Latest tags for major after patch update: " + JSON.stringify(latestTags))
 	buildTags(latestTags).forEach(tag => createTag(github, context, tag))
 }
 
@@ -119,8 +114,10 @@ function setPatchVersion(tags) {
 
 function buildTags(tags) {
 	const builtTags = []
-	for (const tag of tags.values()) {
-		builtTags.push(tag.join('.'))
+	for (const tagParts of tags.values()) {
+		const t = tagParts.join('.')
+		console.log("built tag: " + t)
+		builtTags.push(t)
 	}
 	return builtTags
 }
