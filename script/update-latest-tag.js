@@ -13,7 +13,11 @@ module.exports = async function ({github, context}) {
 			pattern: 'v*'
 		}
 	)
-	console.log("Tags from GH: " + JSON.stringify(tagsFromGH.data))
+	console.log("Tags from GH: " + JSON.stringify(tagsFromGH.data.map(tag => tag.name)))
+	
+	const tagsWithLS = execGitCmd('git ls-remote --tags --sort=-v:refname')
+		.map(tag => tag.split("/")[2])
+	console.log("Tags with ls: " + JSON.stringify(tagsWithLS))
 	
 	let latestTags = getLatestTagsForMajorVersions(repoTags)
 	latestTags = updateMinorVersions(latestTags, majorVersionsUpdated(context))
