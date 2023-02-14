@@ -179,13 +179,13 @@ function getGoModVer() {
 	return goModVersion
 }
 
-function createTag(github, context, tag, sha) {
+function createTag(github, context, tag) {
 	github.rest.git.createRef(
 			{
 				owner: context.repo.owner,
 				repo: context.repo.repo,
 				ref: `refs/tags/${tag}`,
-				sha: sha,
+				sha: context.sha,
 			})
 		.then(() => console.log("Created Tag: " + tag))
 		.catch((error) => {
