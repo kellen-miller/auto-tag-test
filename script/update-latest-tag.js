@@ -13,7 +13,8 @@ module.exports = async function ({github, context}) {
 	}
 	
 	let latestTags = getLatestTagsForMajorVersions(allTags)
-	latestTags = updateMinorVersion(latestTags, getMajorVersionWithUpdates(context))
+	latestTags = updateMinorVersion(
+		latestTags, majorVersionsUpdated(context, latestTags))
 	latestTags = setPatchVersion(latestTags)
 	
 	for (const tag of buildTags(latestTags)) {
@@ -37,11 +38,20 @@ function diffFileNames(before, sha) {
 	execGitCmd(`git fetch origin ${before} --depth=1`)
 	const output = execGitCmd(`git diff --name-only ${before} ${sha}`)
 	if (output.length === 0) {
-		console.log('No file changes detected')
+		console.log("No file changes detected")
 		return []
 	}
 	
-	return output[0]
+	output.sort((a, b) => {
+		const aPathLength = a.split("/").length
+		const bPathLength = b.split("/").length
+		if (aPathLength === bPathLength) {
+			return a.localeCompare(b)
+		}
+		return aPathLength - bPathLength
+	})
+	
+	return output
 }
 
 function getLatestTagsForMajorVersions(tags) {
@@ -57,21 +67,27 @@ function getLatestTagsForMajorVersions(tags) {
 	return majorVersionLatestTags
 }
 
-function getMajorVersionWithUpdates(context) {
+function majorVersionsUpdated(context, latestTags) {
 	const majorsUpdated = new Set()
-	const grpcServicesPath = 'src/Grpc/Services/Mercari/Platform/Apius'
+	const grpcServicesPath = "src/Grpc/Services/Mercari/Platform/Apius"
 	const diffFiles = diffFileNames(context.payload.before, context.sha)
 	let updateAllVersions = false
 	
 	for (const filePath of diffFiles) {
-		const pathParts = filePath.split('/')
-		
-		if (pathParts.length === 6 && // shorter paths will come first
-			filePath === grpcServicesPath) {
+		const pathParts = filePath.split("/")
+		if (pathParts.length === 7 && filePath.includes(grpcServicesPath)) {
 			updateAllVersions = true
-		} else if (pathParts.length > 6 &&
-			(updateAllVersions || pathParts[6].includes(grpcServicesPath))) {
+			// still need to loop in case a new major version directory was
+			// added. Version would not be in the latest tags map.
+		} else if (updateAllVersions ||
+			(pathParts.length >= 8 && filePath.includes(grpcServicesPath))) {
 			majorsUpdated.add(pathParts[6].toLowerCase())
+		}
+	}
+	
+	if (updateAllVersions) { // update all previous major versions
+		for (const majorVersion of latestTags.keys()) {
+			majorsUpdated.add(majorVersion)
 		}
 	}
 	
@@ -80,14 +96,22 @@ function getMajorVersionWithUpdates(context) {
 
 function updateMinorVersion(latestTagsForMajorVersion, majorVersionsUpdated) {
 	for (const majorVersion of majorVersionsUpdated) {
-		const latestTag = latestTagsForMajorVersion.get(majorVersion)
+		let latestTag = latestTagsForMajorVersion.get(majorVersion)
+		if (!latestTag) {
+			latestTagsForMajorVersion.set(
+				majorVersion,
+				[majorVersion, "0", "0"],
+			)
+			continue
+		}
+		
 		const incrementedMinorVersion = parseInt(latestTag[1]) + 1
 		latestTagsForMajorVersion.set(
 			majorVersion,
-			[latestTag[0], incrementedMinorVersion.toString(), latestTag[2]]
+			[latestTag[0], incrementedMinorVersion.toString(), latestTag[2]],
 		)
 	}
-
+	
 	return latestTagsForMajorVersion
 }
 
@@ -98,7 +122,7 @@ function setPatchVersion(tags) {
 	const pcPatchVersion = pcVersionParts[2]
 	
 	let patch = pcMinorVersion
-	if (pcPatchVersion) {
+	if (pcPatchVersion && pcPatchVersion !== '0') {
 		patch += '-' + pcPatchVersion
 	}
 	
@@ -131,7 +155,7 @@ function getVersionFromFile(filePath, regex, delimiter, indexAfterSplit) {
 function getGoModVer() {
 	const goModRegex = 'github.com/kouzoh/platform-client-go v\\d+\\.\\d+\.\\d+'
 	const goModVersion = getVersionFromFile(
-		'go.mod',
+		'../go.mod',
 		goModRegex,
 		' ',
 		1)
@@ -153,48 +177,6 @@ function getGoModVer() {
 	console.log('go.mod platform-client-go version: ' + goModVersion)
 	return goModVersion
 }
-
-function getClientsGoVer() {
-	const clientsGoVersion = getVersionFromFile(
-		'clients.go',
-		'const Version = "v\\d+\\.\\d+\.\\d+"',
-		'"',
-		1)
-	
-	if (!clientsGoVersion) {
-		console.warn(
-			'No version for Go platform client found in clients.go\n',
-			'Looked for pattern: ' + clientsGoVersion + '\n',
-			"Hint: The clients.go file should contain the current" +
-				" platform-client-go version in the form of 'const Version =" +
-				" \"v1.2.3\"'\n\n",
-			'Skipping tag creation'
-		)
-		return ""
-	}
-	
-	console.log('clients.go platform-client-go version: ' + clientsGoVersion)
-	return clientsGoVersion
-}
-
-// function getPlatformClientVersion() {
-// 	const goModVersion = getGoModVer()
-// 	const clientsGoVersion = getClientsGoVer()
-//
-// 	if (goModVersion !== clientsGoVersion) {
-// 		console.warn(
-// 			'Version mismatch between go.mod and clients.go\n' +
-// 			`go.mod: ${goModVersion}\n` +
-// 			`clients.go: ${clientsGoVersion}\n` +
-// 			"Hint: Run 'make grpc/regen-clients' to sync the" +
-// 				" platform-client-go versions between go.mod and" +
-// 			" clients.go\n\n" +
-// 			'Skipping tag creation'
-// 		)
-// 	}
-//
-// 	return goModVersion
-// }
 
 function createTag(github, tag) {
 	github.rest.git.createRef(
