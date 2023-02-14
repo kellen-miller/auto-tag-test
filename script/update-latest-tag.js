@@ -59,6 +59,7 @@ function getLatestTagsForMajorVersions(tags) {
 
 function getMajorVersionWithUpdates(context) {
 	const majorsUpdated = new Set()
+	const notUpdated = new Set()
 	const grpcServicesPath = 'src/Grpc/Services/Mercari/Platform/Apius'
 	const diffFiles = diffFileNames(context.payload.before, context.sha)
 	let updateAllVersions = false
@@ -66,12 +67,24 @@ function getMajorVersionWithUpdates(context) {
 	for (const filePath of diffFiles) {
 		const pathParts = filePath.split('/')
 		
-		if (pathParts.length === 6 && // shorter paths will come first
-			filePath === grpcServicesPath) {
+		if (pathParts.length === 6 && filePath.includes(grpcServicesPath)) {
 			updateAllVersions = true
-		} else if (pathParts.length > 6 &&
-			(updateAllVersions || pathParts[6].includes(grpcServicesPath))) {
-			majorsUpdated.add(pathParts[6].toLowerCase())
+		} else if (pathParts.length >= 7) {
+			if (updateAllVersions || pathParts[6].includes(grpcServicesPath)) {
+				majorsUpdated.add(pathParts[6].toLowerCase())
+			} else {
+				notUpdated.add(pathParts[6].toLowerCase())
+			}
+		}
+	}
+	
+	// git diff returns files in abc order so a file Apius/foo will be listed
+	// after Apius/V1. If a file Apius directory is updated, then all
+	// versions need to be updated. So loop through the notUpdated versions
+	// and add them to the majorsUpdated set
+	if (updateAllVersions) {
+		for (const majorVersion of notUpdated) {
+			majorsUpdated.add(majorVersion)
 		}
 	}
 	
@@ -153,48 +166,6 @@ function getGoModVer() {
 	console.log('go.mod platform-client-go version: ' + goModVersion)
 	return goModVersion
 }
-
-function getClientsGoVer() {
-	const clientsGoVersion = getVersionFromFile(
-		'clients.go',
-		'const Version = "v\\d+\\.\\d+\.\\d+"',
-		'"',
-		1)
-	
-	if (!clientsGoVersion) {
-		console.warn(
-			'No version for Go platform client found in clients.go\n',
-			'Looked for pattern: ' + clientsGoVersion + '\n',
-			"Hint: The clients.go file should contain the current" +
-				" platform-client-go version in the form of 'const Version =" +
-				" \"v1.2.3\"'\n\n",
-			'Skipping tag creation'
-		)
-		return ""
-	}
-	
-	console.log('clients.go platform-client-go version: ' + clientsGoVersion)
-	return clientsGoVersion
-}
-
-// function getPlatformClientVersion() {
-// 	const goModVersion = getGoModVer()
-// 	const clientsGoVersion = getClientsGoVer()
-//
-// 	if (goModVersion !== clientsGoVersion) {
-// 		console.warn(
-// 			'Version mismatch between go.mod and clients.go\n' +
-// 			`go.mod: ${goModVersion}\n` +
-// 			`clients.go: ${clientsGoVersion}\n` +
-// 			"Hint: Run 'make grpc/regen-clients' to sync the" +
-// 				" platform-client-go versions between go.mod and" +
-// 			" clients.go\n\n" +
-// 			'Skipping tag creation'
-// 		)
-// 	}
-//
-// 	return goModVersion
-// }
 
 function createTag(github, tag) {
 	github.rest.git.createRef(
