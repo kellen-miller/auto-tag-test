@@ -3,10 +3,7 @@ const proc = require('child_process')
 
 module.exports = async function ({github, context}) {
 	const repoTags = execGitCmd('git ls-remote --tags --sort=-v:refname')
-		.map(tag => {
-			tag.split("/")[2] // refs/tags/v1.2.3 -> v1.2.3
-				.split(".")   // v1.2.3 -> [v1, 2, 3]
-		})
+		.map(tag => tag.split("/")[2].split(".")) // "refs/tags/v1.0.0" -> ["v1", "0", "0"]
 	console.log("Repo tags: " + JSON.stringify(repoTags))
 
 	let latestTags = getLatestTagsForMajorVersions(repoTags)
