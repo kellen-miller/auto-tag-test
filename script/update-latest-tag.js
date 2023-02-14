@@ -7,10 +7,8 @@ const fs = require('fs')
 // if platform-proto has a patch version, add -{patch} to end of tag
 module.exports = async function ({github, context}) {
 	const allTags = execGitCmd("git tag --list --sort=-v:refname")
-		.map(tag => tag.split("\n"))
 	const tagsOldWay = execGitCmd(
 		"git for-each-ref --sort=-v:refname --format=\"%(refname:lstrip=2)\" refs/tags")
-		.map(tag => tag.split("\n"))
 	console.log("All tags: " + allTags)
 	console.log("All tags old way: " + tagsOldWay)
 	
@@ -18,10 +16,8 @@ module.exports = async function ({github, context}) {
 	console.log("Fetching before sha: " + context.payload.before)
 	execGitCmd(`git fetch origin ${context.payload.before} --depth=1`)
 	const allTags2 = execGitCmd("git tag --list --sort=-v:refname")
-		.map(tag => tag.split("\n"))
-	const tagsOldWay2 = execGitCmd("git for-each-ref --sort=-v:refname" +
-		                               " --format=\"%(refname:lstrip=2)\" refs/tags")
-		.map(tag => tag.split("\n"))
+	const tagsOldWay2 = execGitCmd(
+		"git for-each-ref --sort=-v:refname --format=\"%(refname:lstrip=2)\" refs/tags")
 	console.log("All tags2: " + allTags2)
 	console.log("All tags old way2: " + tagsOldWay2)
 	
