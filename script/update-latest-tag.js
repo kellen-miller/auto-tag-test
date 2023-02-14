@@ -4,32 +4,27 @@ const fs = require('fs')
 // major = "src/Grpc/Services/Mercari/Platform/Apius' major version
 // minor = "increment from last tag"
 // patch = "platform-proto minor version"
-// if platform-proto has a patch version, add -{patch} to patch version
-
+// if platform-proto has a patch version, add -{patch} to end of tag
 module.exports = async function ({github, context}) {
+	console.log("context", context)
+	
 	const goModVersion = getGoModVer()
-	if (goModVersion === "") {
+	if (!goModVersion) {
 		return
 	}
 	
 	const clientsGoVersion = getClientsGoVer()
-	if (clientsGoVersion === "") {
-		return
-	}
-
 	if (goModVersion !== clientsGoVersion) {
 		console.error(
 			'Version mismatch between go.mod and clients.go\n',
 			'go.mod: ' + goModVersion + '\n',
 			'clients.go: ' + clientsGoVersion + '\n',
-			"Hint: Run 'make grpc/regen-clients' to sync the platform-client-go" +
-				" versions between go.mod and clients.go\n\n",
+			"Hint: Run 'make grpc/regen-clients' to sync the " +
+				"platform-client-go versions between go.mod and clients.go\n\n",
 			'Skipping tag creation'
 		)
 		return
 	}
-	
-	
 	
 	const tags = getRepoTags()
 	for (const tag of tags) {
@@ -47,25 +42,30 @@ module.exports = async function ({github, context}) {
 			{
 				owner: context.repo.owner,
 				repo: context.repo.repo,
-				ref: `refs/tags/${platformClientGoVersion}`,
+				ref: `refs/tags/${goModVersion}`,
 				sha: context.sha
 			})
-		.then(() => console.log("Created Tag: " + platformClientGoVersion))
+		.then(() => console.log("Created Tag: " + goModVersion))
 		.catch((error) => {
 			if (error.message === 'Reference already exists') {
-				console.log("Tag already exists")
+				console.warn(`Tag ${goModVersion} already exists`)
 			} else {
-				console.error("Error creating tag", error)
+				console.error(`Error creating tag ${goModVersion}`, error)
 			}
+			
 			console.log("\nSkipping tag creation")
 		})
 }
 
-function getVersionFromFile(filePath, regex, delimiter, tagIndex) {
-	return fs
-		.readFileSync(filePath, 'utf8')
-		.match(regex)[0]
-		.split(delimiter)[tagIndex]
+function getVersionFromFile(filePath, regex, delimiter, indexAfterSplit) {
+	try {
+		return fs
+			.readFileSync(filePath, 'utf8')
+			.match(regex)[0]
+			.split(delimiter)[indexAfterSplit]
+	} catch (error) {
+		return ""
+	}
 }
 
 function getGoModVer() {
@@ -91,7 +91,7 @@ function getGoModVer() {
 		return ""
 	}
 	
-	console.log('Found platform-client-go version: ' + goModVersion)
+	console.log('go.mod platform-client-go version: ' + goModVersion)
 	return goModVersion
 }
 
@@ -113,7 +113,7 @@ function getClientsGoVer() {
 		return ""
 	}
 	
-	console.log('Found platform-client-go version: ' + clientsGoVersion)
+	console.log('clients.go platform-client-go version: ' + clientsGoVersion)
 	return clientsGoVersion
 }
 
