@@ -61,14 +61,16 @@ function getMajorVersionWithUpdates(context) {
 	const majorsUpdated = new Set()
 	const grpcServicesPath = 'src/Grpc/Services/Mercari/Platform/Apius'
 	const diffFiles = diffFileNames(context.payload.before, context.sha)
-	let updateAll = false
+	let updateAllVersions = false
 	
 	for (const filePath of diffFiles) {
 		const pathParts = filePath.split('/')
 		
-		if (pathParts.length === 6 && filePath === grpcServicesPath) {
-			updateAll = true
-		} else if (updateAll || pathParts[6].includes(grpcServicesPath)) {
+		if (pathParts.length === 6 && // shorter paths will come first
+			filePath === grpcServicesPath) {
+			updateAllVersions = true
+		} else if (pathParts.length > 6 &&
+			(updateAllVersions || pathParts[6].includes(grpcServicesPath))) {
 			majorsUpdated.add(pathParts[6].toLowerCase())
 		}
 	}
