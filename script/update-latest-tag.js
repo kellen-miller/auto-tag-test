@@ -86,8 +86,7 @@ function updateMinorVersions(majorVersionsUpdated, tagsForMajorVersions) {
 	for (const majorVersion of majorVersionsUpdated) {
 		let latestTag = tagsForMajorVersions.get(majorVersion)
 		let minorVersion = 0
-		let patchVersion = "0" // don't think this matters since it will be set to the platform-client,
-	                           // but just in case
+		let patchVersion = "0"
 		
 		if (latestTag) {
 			minorVersion = parseInt(latestTag[1]) + 1
