@@ -1,4 +1,4 @@
-const script = require('../script/update-latest-tag.js')
+const script = require('script/update-grpc-tags.js')
 
 const github = {}
 const context = {
