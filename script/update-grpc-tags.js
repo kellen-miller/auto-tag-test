@@ -102,7 +102,7 @@ function updateMinorVersions(majorVersionsUpdated, tagsForMajorVersions) {
 function getPlatformClientGoVersion() {
 	const goModRegex = "github.com/kouzoh/platform-client-go v\\d+\\.\\d+\.\\d+"
 	const goModVersion = fs
-		.readFileSync("../go.mod", "utf8")
+		.readFileSync("go.mod", "utf8")
 		.match(goModRegex)[0]
 		.split(" ")[1]
 	
