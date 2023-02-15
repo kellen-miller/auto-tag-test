@@ -52,16 +52,16 @@ function diffFileNames(before, sha) {
 }
 
 function getLatestTagsForMajorVersions(tags) {
-	const majorVersionLatestTags = new Map()
+	const majorVersionToLatestTag = new Map()
 	for (const tag of tags) {
 		const majorVersion = tag[0]
 		// sorted descending order, first tag found for major version = latest
-		if (!majorVersionLatestTags.has(majorVersion)) {
-			majorVersionLatestTags.set(majorVersion, tag)
+		if (!majorVersionToLatestTag.has(majorVersion)) {
+			majorVersionToLatestTag.set(majorVersion, tag)
 		}
 	}
 	
-	return majorVersionLatestTags
+	return majorVersionToLatestTag
 }
 
 function majorVersionsWithUpdates(context) {
@@ -72,6 +72,9 @@ function majorVersionsWithUpdates(context) {
 	for (const filePath of diffFiles) {
 		const pathParts = filePath.split("/")
 		if (pathParts.length >= 8 && filePath.includes(grpcServicesPath)) {
+			// pathParts = ["src", "Grpc", "Services", "Mercari", "Platform", "Apius", "V1", "User",
+			// "UserClient.php"]
+			// pathParts[6] = "V1"
 			majorsUpdated.add(pathParts[6].toLowerCase())
 		}
 	}
@@ -83,7 +86,8 @@ function updateMinorVersions(majorVersionsUpdated, tagsForMajorVersions) {
 	for (const majorVersion of majorVersionsUpdated) {
 		let latestTag = tagsForMajorVersions.get(majorVersion)
 		let minorVersion = 0
-		let patchVersion = "0"
+		let patchVersion = "0" // don't think this matters since it will be set to the platform-client,
+	                           // but just in case
 		
 		if (latestTag) {
 			minorVersion = parseInt(latestTag[1]) + 1
@@ -96,25 +100,12 @@ function updateMinorVersions(majorVersionsUpdated, tagsForMajorVersions) {
 	return tagsForMajorVersions
 }
 
-function getVersionFromFile(filePath, regex, delimiter, indexAfterSplit) {
-	try {
-		return fs
-			.readFileSync(filePath, "utf8")
-			.match(regex)[0]
-			.split(delimiter)[indexAfterSplit]
-	} catch (error) {
-		return ""
-	}
-}
-
 function getPlatformClientGoVersion() {
 	const goModRegex = "github.com/kouzoh/platform-client-go v\\d+\\.\\d+\.\\d+"
-	const goModVersion = getVersionFromFile(
-		"go.mod",
-		goModRegex,
-		" ",
-		1,
-	)
+	const goModVersion = fs
+		.readFileSync("../go.mod", "utf8")
+		.match(goModRegex)[0]
+		.split(" ")[1]
 	
 	if (!goModVersion) {
 		throw new Error(
@@ -154,9 +145,7 @@ function setPatchVersion(tags) {
 function buildTags(tags) {
 	const builtTags = []
 	for (const tagParts of tags.values()) {
-		const t = tagParts.join(".")
-		console.log("built tag: " + t)
-		builtTags.push(t)
+		builtTags.push(tagParts.join("."))
 	}
 	return builtTags
 }
